@@ -13,7 +13,7 @@ namespace TheatricalPlayersRefactoringKata
                 { "comedy", CalculatePriceForComedy }
             });
 
-        public static int Calculate(string typeOfPerformance, int audience)
+        public static int CalculatePriceFor(string typeOfPerformance, int audience)
             => amountMap.ContainsKey(typeOfPerformance) ? amountMap[typeOfPerformance](audience)
                 : throw new Exception("unknown type: " + typeOfPerformance);
 

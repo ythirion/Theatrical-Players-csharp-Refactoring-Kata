@@ -6,10 +6,10 @@ namespace TheatricalPlayersRefactoringKata
     internal static class TextFormatter
     {
         private static readonly CultureInfo formatProvider = new CultureInfo("en-US");
-        internal static string ForLine(string name, int amount, int audience) => 
+        internal static string FormatLineToText(string name, int amount, int audience) => 
             string.Format(formatProvider, "  {0}: {1:C} ({2} seats)\n", name, amount / 100, audience);
 
-        internal static string ForStatement(
+        internal static string FormatStatementToText(
             string customer,
             Statement statement) =>
             string.Format(formatProvider,
