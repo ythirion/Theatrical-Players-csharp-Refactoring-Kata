@@ -24,8 +24,8 @@ namespace TheatricalPlayersRefactoringKata
             Func<string, Statement, string> statementFormatter)
         {
            return invoice.Performances
-                .Select(performance => CreateStatement(plays, performance, lineFormatter))
-                .Aggregate((context, line) => context.Append(line))
+                .Map(performance => CreateStatement(plays, performance, lineFormatter))
+                .Reduce((context, line) => context.Append(line))
                 ?.FormatFor(invoice.Customer, statementFormatter);
         }
 
@@ -35,13 +35,22 @@ namespace TheatricalPlayersRefactoringKata
             Func<string, int, int, string> lineFormatter)
         {
             var performanceType = plays[performance.PlayID].Type;
-            var amount = CalculatePriceFor(performanceType, performance.Audience);
-            var credits = CalculateCreditsFor(performanceType, performance.Audience);
+            var amount = CalculatePrice(performance, performanceType);
+            var credits = CalculateCreditsFor(performanceType, performance.Audience)
 
             return new Statement(
                 lineFormatter(plays[performance.PlayID].Name, amount, performance.Audience),
                 amount,
                 credits);
+        }
+
+        private static int CalculatePrice(Performance performance, string performanceType)
+        {
+            var amount = 0;
+            CalculatePriceFor(performanceType, performance.Audience)
+                            .Match(s => amount = s,
+                                   fail => throw new Exception("unknown type: " + performanceType));
+            return amount;
         }
     }
 }

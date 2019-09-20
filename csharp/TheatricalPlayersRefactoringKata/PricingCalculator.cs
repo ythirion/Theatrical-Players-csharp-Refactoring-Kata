@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using LanguageExt;
+using System;
+using static LanguageExt.Prelude;
 
 namespace TheatricalPlayersRefactoringKata
 {
     internal static class PricingCalculator
     {
-        private static readonly IReadOnlyDictionary<string, Func<int, int>> amountMap = new ReadOnlyDictionary<string, Func<int, int>>(
-            new Dictionary<string, Func<int, int>>
-            {
-                { "tragedy", CalculatePriceForTragedy },
-                { "comedy", CalculatePriceForComedy }
-            });
+        private static readonly Map<string, Func<int, int>> amountMap = 
+            Map<string, Func<int, int>>(("tragedy", CalculatePriceForTragedy), ("comedy", CalculatePriceForComedy));
 
-        public static int CalculatePriceFor(string typeOfPerformance, int audience)
-            => amountMap.ContainsKey(typeOfPerformance) ? amountMap[typeOfPerformance](audience)
-                : throw new Exception("unknown type: " + typeOfPerformance);
+        public static Try<int> CalculatePriceFor(string typeOfPerformance, int audience) 
+            => () => amountMap[typeOfPerformance](audience);
 
         private static int CalculatePriceForTragedy(int audience)
             => audience > 30 ? 40000 + 1000 * (audience - 30) : 40000;
