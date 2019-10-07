@@ -35,22 +35,14 @@ namespace TheatricalPlayersRefactoringKata
             Func<string, int, int, string> lineFormatter)
         {
             var performanceType = plays[performance.PlayID].Type;
-            var amount = CalculatePrice(performance, performanceType);
-            var credits = CalculateCreditsFor(performanceType, performance.Audience)
+            var amount = CalculatePriceFor(performanceType, performance.Audience)
+                            .Match(price => price, fail => throw new Exception("unknown type: " + performanceType));
+            var credits = CalculateCreditsFor(performanceType, performance.Audience);
 
             return new Statement(
                 lineFormatter(plays[performance.PlayID].Name, amount, performance.Audience),
                 amount,
                 credits);
-        }
-
-        private static int CalculatePrice(Performance performance, string performanceType)
-        {
-            var amount = 0;
-            CalculatePriceFor(performanceType, performance.Audience)
-                            .Match(s => amount = s,
-                                   fail => throw new Exception("unknown type: " + performanceType));
-            return amount;
         }
     }
 }
