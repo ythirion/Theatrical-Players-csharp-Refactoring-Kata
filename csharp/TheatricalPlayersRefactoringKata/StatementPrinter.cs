@@ -8,28 +8,30 @@ namespace TheatricalPlayersRefactoringKata
 {
     public class StatementPrinter
     {
-        public string Print(Invoice invoice, Dictionary<string, Play> plays)
+        public string Print(
+            Invoice invoice, 
+            Dictionary<string, Play> plays)
         {
-            var totalAmount = 0;
-            var volumeCredits = 0;
-            var result = string.Format("Statement for {0}\n", invoice.Customer);
-            CultureInfo cultureInfo = new CultureInfo("en-US");
+            return
+                TextFormatter.Format(
+                invoice.Performances
+                    .Map(p => CreateStatement(p, plays, TextFormatter.ToTextFormat))
+                    .Reduce((agg, line) => agg.Append(line)), invoice.Customer);
+        }
 
-            foreach(var perf in invoice.Performances)
-            {
-                var play = plays[perf.PlayID];
-                var thisAmount = CalculateAmountFor(perf, play)
-                    .Match(amount => amount, fail => throw new Exception("unknown type: " + play.Type));
+        private static Statement CreateStatement(
+            Performance perf,
+            Dictionary<string, Play> plays,
+            Func<Performance, Play, int, string> lineFormatter)
+        {
+            var play = plays[perf.PlayID];
+            var amount = CalculateAmountFor(perf, play)
+                    .Match(a => a, fail => throw new Exception("unknown type: " + play.Type));
 
-                volumeCredits += CalculateCredits(perf, play);
-
-                // print line for this order
-                result += String.Format(cultureInfo, "  {0}: {1:C} ({2} seats)\n", play.Name, Convert.ToDecimal(thisAmount / 100), perf.Audience);
-                totalAmount += thisAmount;
-            }
-            result += String.Format(cultureInfo, "Amount owed is {0:C}\n", Convert.ToDecimal(totalAmount / 100));
-            result += String.Format("You earned {0} credits\n", volumeCredits);
-            return result;
+            return new Statement(
+                amount,
+                CalculateCredits(perf, play),
+                lineFormatter(perf, play, amount));
         }
 
         private static int CalculateCredits(Performance perf, Play play) =>
@@ -37,36 +39,31 @@ namespace TheatricalPlayersRefactoringKata
 
         private static int CalculateDefaultCredits(Performance perf) => Math.Max(perf.Audience - 30, 0);
 
-        /* // add volume credits
-                volumeCredits += Math.Max(perf.Audience - 30, 0);
-                // add extra credit for every ten comedy attendees
-                if ("comedy" == play.Type) volumeCredits += (int)Math.Floor((decimal)perf.Audience / 5);
-*/
-
         private static Map<string, Func<Performance, int>> calculateMap = Map<string, Func<Performance, int>>(("tragedy", CalculateTragedyAmount), ("comedy", CalculateComedyAmount));
 
         private static Try<int> CalculateAmountFor(Performance perf, Play play) => () => calculateMap[play.Type](perf);
 
-        private static int CalculateComedyAmount(Performance perf)
+        private static int CalculateComedyAmount(Performance performance)
         {
-            int thisAmount = 30000;
-            if (perf.Audience > 20)
+            int amount = 30000;
+            if (performance.Audience > 20)
             {
-                thisAmount += 10000 + 500 * (perf.Audience - 20);
+                amount += 10000 + 500 * (performance.Audience - 20);
             }
-            thisAmount += 300 * perf.Audience;
-            return thisAmount;
+            amount += 300 * performance.Audience;
+
+            return amount;
         }
 
-        private static int CalculateTragedyAmount(Performance perf)
+        private static int CalculateTragedyAmount(Performance performance)
         {
-            int thisAmount = 40000;
-            if (perf.Audience > 30)
+            int amount = 40000;
+            if (performance.Audience > 30)
             {
-                thisAmount += 1000 * (perf.Audience - 30);
+                amount += 1000 * (performance.Audience - 30);
             }
 
-            return thisAmount;
+            return amount;
         }
     }
 }
